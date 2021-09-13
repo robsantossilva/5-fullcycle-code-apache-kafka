@@ -45,4 +45,111 @@ Perguntas:
 
 ### Tópicos
 É o canal de comunicação responsável por receber e disponibilizar os dados enviados para o Kafka.
+![Tópicos](./.github/topico-1.png)
 
+### Tópico ~= Log
+![Tópico ~= Log](./.github/topico-log.png)
+
+### Anatomia de um registro
+![Tópico ~= Log](./.github/anatomia-de-um-registro.png)
+
+### Partições
+Cada tópico pode ter uma ou mais partições para conseguir garantir a distribuição e resiliência de seus dados.
+![Tópico ~= Log](./.github/particoes-em-um-topico.png)
+
+### Sobre as "Keys"
+##### Garantindo ordem de entrega
+- Só é possivel garantir a ordem dentro da mesma partição
+
+Risco: Existe uma grande chace de o Estorno ser executado antes da efetivação da transferencia, pelo fato do consumirdor 1 estar lento; Isso é um problema.
+![](./.github/keys-1.png)
+
+**Transferencia e estorno precisam estar na mesma partição**, e podemos garantir isso através das "Keys"
+
+![](./.github/keys-2.png)
+
+### Partições distribuidas
+
+![](./.github/particoes-distribuidas-1.png)
+
+**Replication Factor**
+![](./.github/particoes-distribuidas-2.png)
+
+### Partition Lidership - Partições Liderança
+![](./.github/particoes-distribuidas-3.png)
+
+### Producer: Garantia de entrega
+
+A mensagem é enviada ao Leader sem a necessidade de confirmação
+![](./.github/garantia-ack-0.png)
+
+A mensagem é enviada e o Producer aguarda a confirmação do Leader
+![](./.github/garantia-ack-1.png)
+
+A mensagem é enviada e o Producer aguarda a confirmação e duplicação para os Followers ser realizada pelo Leader
+![](./.github/garantia-ack-menos-1.png)
+
+##### Performance VS Garantia
+**At most once:** Melhor performance. Pode perder algumas mensagens
+![](./.github/at-most-once.png)
+
+**At least once:** Performance moderada. Pode duplicar mensagens
+![](./.github/at-least-once.png)
+
+**Exacly once:** Pior performance. Exatamente uma vez
+1,2,3,4,5 -> [Kafka Process] -> 1,2,3,4,5
+![](./.github/exacly-once.png)
+
+### Producer: Indepotência
+Producer Indepotente **OFF** : Mensagem duplicada
+Producer Indepotente **ON** : Descarta mensagem duplicada
+É um recurso que gera lentidão mas garante que não havera duplicidade
+![](./.github/producer-indepotente.png)
+
+### Consumer e Consumer Group
+
+Grupo com 2 consumers lendo 3 partições.
+Um consumer irá ler 2 partições
+![](./.github/consumer-group-1.png)
+
+Grupo com 3 consumers lendo 3 partições, cada um lê uma partição
+![](./.github/consumer-group-2.png)
+
+Grupo com 4 consumers lendo 3 partições.
+Um consumer irá ler ficar parado, sem ler nenhuma partição.
+**Se existir apenas 1 consumer no grupo ele iá ler todas as partições**
+![](./.github/consumer-group-3.png)
+
+
+
+Docker Compose:
+- Zookeeper
+- Kafka
+- Control Center Confluent
+
+### Commands
+
+Create a new topic
+``` bash
+kafka-topics --create --topic=teste --bootstrap-server=localhost:9092 --partitions=3
+kafka-topics --list --bootstrap-server=localhost:9092
+```
+``` bash
+#Detalhamento do topic
+kafka-topics --bootstrap-server=localhost:9092 --topic=teste --describe
+Topic: teste    TopicId: PWQDtuVVSk2sfriWQYRZmg PartitionCount: 3       ReplicationFactor: 1    Configs: 
+        Topic: teste    Partition: 0    Leader: 1       Replicas: 1     Isr: 1
+        Topic: teste    Partition: 1    Leader: 1       Replicas: 1     Isr: 1
+        Topic: teste    Partition: 2    Leader: 1       Replicas: 1     Isr: 1
+```
+
+``` bash
+#start consumer
+kafka-console-consumer --bootstrap-server=localhost:9092 --topic=teste
+
+#producer a message
+kafka-console-producer --bootstrap-server=localhost:9092 --topic=teste
+
+#--from-beginning
+kafka-console-consumer --bootstrap-server=localhost:9092 --topic=teste --from-beginning
+```
