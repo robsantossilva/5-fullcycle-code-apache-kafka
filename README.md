@@ -127,7 +127,7 @@ Docker Compose:
 - Kafka
 - Control Center Confluent
 
-### Commands
+### Consumindo e produzindo mensagens
 
 Create a new topic
 ``` bash
@@ -153,3 +153,100 @@ kafka-console-producer --bootstrap-server=localhost:9092 --topic=teste
 #--from-beginning
 kafka-console-consumer --bootstrap-server=localhost:9092 --topic=teste --from-beginning
 ```
+
+### Introdução aos consumers groups
+
+Executando 2 consumers
+``` bash
+kafka-console-consumer --bootstrap-server=localhost:9092 --topic=teste
+
+kafka-console-consumer --bootstrap-server=localhost:9092 --topic=teste
+```
+
+Consumidores totalmente independentes consomem a mesma mensagem
+**Resolvendo esse problema com Groups**
+``` bash
+kafka-console-consumer --bootstrap-server=localhost:9092 --topic=teste --group=x
+
+kafka-console-consumer --bootstrap-server=localhost:9092 --topic=teste --group=x
+```
+
+### Por dentro de um consumer group
+``` bash
+kafka-consumer-groups --bootstrap-server=localhost:9092 --group=x --describe
+#GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID      HOST            CLIENT-ID
+# x              teste           0          23              23              0               consumer-x-...47 /172.19.0.3     consumer-x-1
+# x              teste           1          29              29              0               consumer-x-...47 /172.19.0.3     consumer-x-1
+# x              teste           2          17              17              0               consumer-x-...00 /172.19.0.3     consumer-x-1
+```
+
+### Navegando pelo Confluent control center
+``` bash
+http://localhost:9021/
+```
+
+
+### Golang/Kafka
+
+https://github.com/edenhill/librdkafka
+Lib em C como interface para outras linguagens
+
+<br>
+<br>
+
+## Kafka Connect
+---
+"Kafka Connect é um componente gratuito e open-source do Apache Kafka que trabalha como um hub de dados centralizado para integrações simples entre banco de dados, key-value stores, serach indexes e file systems."
+
+https://docs.confluent.io/platform/current/connect/index.html
+
+### Dinâmica
+![](./.github/kafka-connect-dinamica.png)
+
+
+### Standalone Workers
+![](./.github/standalone-workers.png)
+
+### Distributed Workers
+![](./.github/distributed-workers.png)
+
+### Converters
+As tasks utilizam os "converters" para mudar o firmato dos dados tanto para leitura ou escrita no Kafka.
+- Avro
+- Protobuf
+- JsonSchema
+- Json
+- String
+
+### DLQ - Dead Letter Queue
+Quando há um registro inválido, independente da razão, o erro pode ser tratado nas configurações do conector através da propriedade "errors.tolerance". Esse tipo de configuração pode ser realizado apenas para conectores do tipo "Sink".
+
+- none: Faz a tafera falhar imediatamente.
+- all: Erros são ignorados e o processo continua normalmente
+- errors.deadletterqueue.topic.name = nome-do-topico
+
+### Confluent Hub
+https://www.confluent.io/hub/
+
+### Inicializando serviços
+[./fc2-kafka-connect/docker-compose.yaml](./fc2-kafka-connect/docker-compose.yaml)
+``` bash
+docker-compose up -d
+```
+
+Kafka Control Center
+http://localhost:9021
+
+### Confirurando MySQL
+``` bash
+docker-compose exec mysql bash
+
+mysql -uroot -p
+
+CREATE TABLE categories(id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255));
+```
+
+### Configurando connector do Mysql
+
+
+### Confluent Cloud
